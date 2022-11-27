@@ -99,37 +99,20 @@ class KoBERT():
 
             out = self.model(token_ids, valid_length, segment_ids)
 
-            test_eval = []
             for i in out:
-                logits = i
-                logits = logits.detach().cpu().numpy()
+                logits = i.detach().cpu().numpy()
 
-                if np.argmax(logits) == 0:
-                    test_eval.append("기쁨이")
-                elif np.argmax(logits) == 1:
-                    test_eval.append("불안이")
-                elif np.argmax(logits) == 2:
-                    test_eval.append("당황이")
-                elif np.argmax(logits) == 3:
-                    test_eval.append("슬픔이")
-                elif np.argmax(logits) == 4:
-                    test_eval.append("분노가")
-                elif np.argmax(logits) == 5:
-                    test_eval.append("상처가")
-
-            min_logits = min(logits)
-            max_logits = max(logits)
             normalized_logits = new_softmax(logits)
-            print("logits", normalized_logits)
-            print(">> 입력하신 내용에서 " + test_eval[0] + " 느껴집니다.")
+            dict1 = dict(zip(['기쁨', '불안', '당황', '슬픔', '분노', '상처'], normalized_logits))
 
-KoBERT_model = KoBERT('./KoBERT_model.pt')
+            return dict1
 
-# 질문 무한반복하기! 0 입력시 종료
-end = 1
-while end == 1:
-    sentence = input("하고싶은 말을 입력해주세요 : ")
-    if sentence == "0":
-        break
-    KoBERT_model.predict(sentence)
-    print("\n")
+# KoBERT_model = KoBERT('./KoBERT_model.pt')
+
+# end = 1
+# while end == 1:
+#     sentence = input("하고싶은 말을 입력해주세요 : ")
+#     if sentence == "0":
+#         break
+#     print(KoBERT_model.predict(sentence))
+#     print("\n")
