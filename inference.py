@@ -107,12 +107,12 @@ class KoBERT():
 
             return dict1
 
-KoBERT_model = KoBERT('./KoBERT_model.pt')
+# KoBERT_model = KoBERT('./KoBERT_model.pt')
 
-end = 1
-while end == 1:
-    sentence = input("하고싶은 말을 입력해주세요 : ")
-    if sentence == "0":
-        break
-    print(KoBERT_model.predict(sentence))
-    print("\n")
+# end = 1
+# while end == 1:
+#     sentence = input("하고싶은 말을 입력해주세요 : ")
+#     if sentence == "0":
+#         break
+#     print(KoBERT_model.predict(sentence))
+#     print("\n")
