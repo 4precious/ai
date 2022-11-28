@@ -8,7 +8,7 @@ import numpy as np
 from kobert.utils import get_tokenizer
 from kobert.pytorch_kobert import get_pytorch_kobert_model
 
-bertmodel, vocab = get_pytorch_kobert_model(cachedir='.cache')
+
 
 class BERTClassifier(nn.Module):
     def __init__(self,
@@ -56,63 +56,63 @@ class BERTDataset(Dataset):
         return (len(self.labels))
 
 
-max_len = 64
-batch_size = 64
-warmup_ratio = 0.1
-num_epochs = 15
-max_grad_norm = 1
-log_interval = 100
-learning_rate = 5e-5
 
-# 토큰화
-tokenizer = get_tokenizer()
-tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
-device = torch.device("cpu")
-
-def new_softmax(a): 
-    c = np.max(a)
-    exp_a = np.exp(a-c)
-    sum_exp_a = np.sum(exp_a)
-    y = (exp_a / sum_exp_a) * 100
-    return [np.round(x, 3) for x in y]
 
 class KoBERT():
     def __init__(self, PATH):
-        self.model = torch.load(PATH, map_location=device)
+        self.bertmodel, self.vocab = get_pytorch_kobert_model(cachedir='.cache')
+        self.tokenizer = get_tokenizer()
+        self.tok = nlp.data.BERTSPTokenizer(self.tokenizer, self.vocab, lower=False)
+        self.device = torch.device("cpu")
+        self.batch_size = 64
+        self.max_len = 64
+        self.warmup_ratio = 0.1
+        self.num_epochs = 15
+        self.max_grad_norm = 1
+        self.log_interval = 100
+        self.learning_rate = 5e-5
+        self.model = torch.load(PATH, map_location=self.device)
         self.model.eval()
+    
+    def new_softmax(self, a): 
+        c = np.max(a)
+        exp_a = np.exp(a-c)
+        sum_exp_a = np.sum(exp_a)
+        y = (exp_a / sum_exp_a) * 100
+        return [np.round(x, 3) for x in y]
 
     def predict(self, predict_sentence):
         data = [predict_sentence, '0']
         dataset_another = [data]
 
         another_test = BERTDataset(
-            dataset_another, 0, 1, tok, max_len, True, False)
+            dataset_another, 0, 1, self.tok, self.max_len, True, False)
         test_dataloader = torch.utils.data.DataLoader(
-            another_test, batch_size=batch_size, num_workers=5)
+            another_test, batch_size=self.batch_size, num_workers=5)
 
         for batch_id, (token_ids, valid_length, segment_ids, label) in enumerate(test_dataloader):
-            token_ids = token_ids.long().to(device)
-            segment_ids = segment_ids.long().to(device)
+            token_ids = token_ids.long().to(self.device)
+            segment_ids = segment_ids.long().to(self.device)
 
             valid_length = valid_length
-            label = label.long().to(device)
+            label = label.long().to(self.device)
 
             out = self.model(token_ids, valid_length, segment_ids)
 
             for i in out:
                 logits = i.detach().cpu().numpy()
 
-            normalized_logits = new_softmax(logits)
+            normalized_logits = self.new_softmax(logits)
             dict1 = dict(zip(['기쁨', '불안', '당황', '슬픔', '분노', '상처'], normalized_logits))
 
             return dict1
 
-# KoBERT_model = KoBERT('./KoBERT_model.pt')
+KoBERT_model = KoBERT('./KoBERT_model.pt')
 
-# end = 1
-# while end == 1:
-#     sentence = input("하고싶은 말을 입력해주세요 : ")
-#     if sentence == "0":
-#         break
-#     print(KoBERT_model.predict(sentence))
-#     print("\n")
+end = 1
+while end == 1:
+    sentence = input("하고싶은 말을 입력해주세요 : ")
+    if sentence == "0":
+        break
+    print(KoBERT_model.predict(sentence))
+    print("\n")
